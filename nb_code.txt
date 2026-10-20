@@ -1,0 +1,89 @@
+===== CELL 1 =====
+N0=20;
+kmax=1.;
+δk=(kmax)/(N0);
+α=1/δk; (* Somewhat arbitrary choice *)
+
+Kinetic=Table[i^(2)KroneckerDelta[i,j],{i,-kmax,kmax,δk},{j,-kmax,kmax,δk}];
+Potential=Table[δk(α)/(Abs[i-j]+δk),{i,-kmax,kmax,δk},{j,-kmax,kmax,δk}];
+kTab=Table[i,{i,-kmax,kmax,δk}];
+
+===== CELL 2 =====
+Dimensions[Kinetic]
+
+===== CELL 3 =====
+kTab
+
+===== CELL 4 =====
+{evals,evecs}=Transpose[Sort[Transpose[Eigensystem[Kinetic+Potential]]]];
+
+===== CELL 5 =====
+ListPlot[{evecs[[1]](*,evecs[[2]]*)}]
+
+===== CELL 6 =====
+ListPlot[{evecs[[1]]Sign[evecs[[1]]],evecs[[2]]Sign[evecs[[1]]]}]
+
+===== CELL 7 =====
+Ψ0=Table[{kTab[[i]],Abs[evecs[[1,i]]]},{i,Length[kTab]}];
+ Ψ1=Table[{kTab[[i]],evecs[[2,i]]Sign[evecs[[1,i]]]},{i,Length[kTab]}];
+ Ψ2=Table[{kTab[[i]],evecs[[3,i]]Sign[evecs[[1,i]]]},{i,Length[kTab]}];
+
+ E0=Table[{kTab[[i]],evals[[1]]},{i,Length[kTab]}];
+ E1=Table[{kTab[[i]],evals[[2]]},{i,Length[kTab]}];
+ E2=Table[{kTab[[i]],evals[[3]]},{i,Length[kTab]}];
+ E3=Table[{kTab[[i]],evals[[4]]},{i,Length[kTab]}];
+
+ListPlot[{Ψ0,Ψ1,Ψ2},Joined->True,PlotMarkers->Automatic,ImageSize->500,Frame->True,FrameStyle->Directive[Black,Thickness[0.001]],FrameLabel->{Style["\<k\>",24,Black,"\<ComputerModern\>"],Style["\<\!\(\*SubscriptBox[\(Ψ\), \(n\)]\)(k)\>",24,Black,"\<ComputerModern\>"]},Axes->True,AxesStyle->Black,FrameStyle->Directive[Black,Thickness[0.001]],LabelStyle->{24,"\<ComputerModern\>",Black},AspectRatio->0.75,ImageSize->Large]
+
+ListPlot[{E0,E1,E2,E3},Joined->True,PlotMarkers->Automatic,ImageSize->500,Frame->True,FrameStyle->Directive[Black,Thickness[0.001]],FrameLabel->{None,Style["\<\!\(\*SubscriptBox[\(E\), \(n\)]\)\>",24,Black,"\<ComputerModern\>"]},Axes->True,AxesStyle->Black,LabelStyle->{24,"\<ComputerModern\>",Black},AspectRatio->0.75,FrameTicks->{None,Automatic} (*This line hides x-axis ticks*)]\n
+
+===== CELL 8 =====
+N0=18;
+kmax=0.5;
+δk=(kmax)/(N0);
+
+kGrid=Flatten[ParallelTable[{kx,ky},{kx,-kmax,kmax,δk},{ky,-kmax,kmax,δk}],1];
+Dimensions[kGrid]
+
+===== CELL 9 =====
+Kinetic=ParallelTable[ki.ki KroneckerDelta[ki[[1]],kj[[1]]]KroneckerDelta[ki[[2]],kj[[2]]],{ki,kGrid},{kj,kGrid}];
+Potential=ParallelTable[(1. )/(Norm[ki-kj]+δk),{ki,kGrid},{kj,kGrid}];
+
+===== CELL 10 =====
+Kinetic//Dimensions
+
+===== CELL 11 =====
+{evals,evecs}=Transpose[Sort[Transpose[Eigensystem[Kinetic+Potential]]]];
+
+===== CELL 12 =====
+evecs[[1]]
+
+===== CELL 13 =====
+ListPlot[{evecs[[1]]Sign[evecs[[1]]],evecs[[2]]Sign[evecs[[1]]]}]
+
+===== CELL 14 =====
+Ψ0=ParallelTable[{kGrid[[i,1]],kGrid[[i,2]],Abs[evecs[[1,i]]]},{i,Length[kGrid]}];
+ Ψ1=ParallelTable[{kGrid[[i,1]],kGrid[[i,2]],evecs[[2,i]]Sign[evecs[[1,i]]]},{i,Length[kGrid]}];
+Ψ2=ParallelTable[{kGrid[[i,1]],kGrid[[i,2]],evecs[[3,i]]Sign[evecs[[1,i]]]},{i,Length[kGrid]}];
+Ψ3=ParallelTable[{kGrid[[i,1]],kGrid[[i,2]],evecs[[4,i]]Sign[evecs[[1,i]]]},{i,Length[kGrid]}];
+Ψ4=ParallelTable[{kGrid[[i,1]],kGrid[[i,2]],evecs[[5,i]]Sign[evecs[[1,i]]]},{i,Length[kGrid]}];
+
+ListDensityPlot[Ψ0,ImageSize->500,PlotRange->All,Frame->True,FrameStyle->Directive[Black,Thickness[0.001]],FrameLabel->{Style["\<\!\(\*SubscriptBox[\(k\), \(x\)]\)\>",24,Black,"\<ComputerModern\>"],Style["\<\!\(\*SubscriptBox[\(k\), \(y\)]\)\>",24,Black,"\<ComputerModern\>"],Style["\<\!\(\*SubscriptBox[\(Ψ\), \(0\)]\)(k)\>",24,Black,"\<ComputerModern\>"]},Axes->True,AxesStyle->Black,FrameStyle->Directive[Black,Thickness[0.001]],LabelStyle->{20,"\<ComputerModern\>",Black},AspectRatio->0.75,ImageSize->Large,ColorFunction->"\<TemperatureMap\>",PlotLegends->Placed[Automatic,Right]]
+
+ListDensityPlot[Ψ1,ImageSize->500,PlotRange->All,Frame->True,FrameStyle->Directive[Black,Thickness[0.001]],FrameLabel->{Style["\<\!\(\*SubscriptBox[\(k\), \(x\)]\)\>",24,Black,"\<ComputerModern\>"],Style["\<\!\(\*SubscriptBox[\(k\), \(y\)]\)\>",24,Black,"\<ComputerModern\>"],Style["\<\!\(\*SubscriptBox[\(Ψ\), \(n\)]\)(k)\>",24,Black,"\<ComputerModern\>"]},Axes->True,AxesStyle->Black,FrameStyle->Directive[Black,Thickness[0.001]],LabelStyle->{20,"\<ComputerModern\>",Black},AspectRatio->0.75,ImageSize->Large,ColorFunction->"\<TemperatureMap\>",PlotLegends->Placed[Automatic,Right]]
+
+ListDensityPlot[Ψ2,ImageSize->500,PlotRange->All,Frame->True,FrameStyle->Directive[Black,Thickness[0.001]],FrameLabel->{Style["\<\!\(\*SubscriptBox[\(k\), \(x\)]\)\>",24,Black,"\<ComputerModern\>"],Style["\<\!\(\*SubscriptBox[\(k\), \(y\)]\)\>",24,Black,"\<ComputerModern\>"],Style["\<\!\(\*SubscriptBox[\(Ψ\), \(n\)]\)(k)\>",24,Black,"\<ComputerModern\>"]},Axes->True,AxesStyle->Black,FrameStyle->Directive[Black,Thickness[0.001]],LabelStyle->{20,"\<ComputerModern\>",Black},AspectRatio->0.75,ImageSize->Large,ColorFunction->"\<TemperatureMap\>",PlotLegends->Placed[Automatic,Right]]
+
+ListDensityPlot[Ψ3,ImageSize->500,PlotRange->All,Frame->True,FrameStyle->Directive[Black,Thickness[0.001]],FrameLabel->{Style["\<\!\(\*SubscriptBox[\(k\), \(x\)]\)\>",24,Black,"\<ComputerModern\>"],Style["\<\!\(\*SubscriptBox[\(k\), \(y\)]\)\>",24,Black,"\<ComputerModern\>"],Style["\<\!\(\*SubscriptBox[\(Ψ\), \(n\)]\)(k)\>",24,Black,"\<ComputerModern\>"]},Axes->True,AxesStyle->Black,FrameStyle->Directive[Black,Thickness[0.001]],LabelStyle->{20,"\<ComputerModern\>",Black},AspectRatio->0.75,ImageSize->Large,ColorFunction->"\<TemperatureMap\>",PlotLegends->Placed[Automatic,Right]];
+
+ListDensityPlot[Ψ4,ImageSize->500,PlotRange->All,Frame->True,FrameStyle->Directive[Black,Thickness[0.001]],FrameLabel->{Style["\<\!\(\*SubscriptBox[\(k\), \(x\)]\)\>",24,Black,"\<Compute
+
+===== CELL 15 =====
+ListPlot[evals[[1;;5]]]
+
+===== CELL 16 =====
+(* Comment: I have now labelled/indexed it such that n=0 is the ground state *)
+
+===== CELL 17 =====
+ListPlot[Table[{i-1,evals[[i]]},{i,1,4}],ImageSize->500,PlotRange->All,Frame->True,FrameStyle->Directive[Black,Thickness[0.001]],FrameLabel->{Style["\<n\>",24,Black,"\<ComputerModern\>"],Style["\<En\>",24,Black,"\<ComputerModern\>"],Style["\<\!\(\*SubscriptBox[\(Ψ\), \(n\)]\)(k)\>",24,Black,"\<ComputerModern\>"]},Axes->True,AxesStyle->Black,FrameStyle->Directive[Black,Thickness[0.001]],LabelStyle->{20,"\<ComputerModern\>",Black},AspectRatio->0.75,ImageSize->Large]
+
