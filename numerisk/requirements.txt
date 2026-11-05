@@ -3,3 +3,5 @@ scipy
 matplotlib
 sympy
 ipykernel
+pandas
+qutip
