@@ -10,7 +10,7 @@ os.makedirs(fig_dir, exist_ok=True)
 # System parameters for 2 qubits H__ising(units: rad/μs and μs)
 N = 2 # number of qubits
 c = 2*np.pi * 3                          # coupling, 3 MHz
-g = c * (np.ones((N, N)))    # all-to-all, zero diagonal
+g = -c * (np.ones((N, N)))    # all-to-all, zero diagonal
 delta_j_values = np.array([0.1, 1, 10]) * c # so that delta/g = 0.1, 1, 10
 t = np.linspace(0, 0.2, 1000)            # μs 0 to 200 ns, 1000 points
 # system parameters for 2 qubits trotter

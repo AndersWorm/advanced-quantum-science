@@ -19,19 +19,19 @@ tau = 0.020                                  # fixed step size, 20 ns
 n = 60                                      # number of rounds, T = n*tau = 2 μs
 t_trotter = tau * np.arange(n + 1)
 
-ground_state = np.array([1, 0, 0, 0], dtype=complex)   # |00>
+state = np.array([1, 0, 0, 0], dtype=complex)   # |00>
 
 fidelity = {}                                # F(t) for each Δ
 for d in delta_j_values:
     # Exact evolution on the Trotter times
     H_exact = H_isingall(N, d*np.ones(N), g)
     E, V = la.eigh(H_exact)
-    psi_exact = time_evolv(coffs(V, ground_state), E, V, t_trotter)
+    psi_exact = time_evolv(coffs(V, state), E, V, t_trotter)
 
     # Trotter evolution, gate fields Δ_j1 = Δ^I / 2
     H_gate = H_XY(N, (d/2)*np.ones(N), g_t)
     U_round = U_trotter(H_gate, tau, 1, N)
-    psi = ground_state.copy()
+    psi = state.copy()
     psi_trot = [psi]
     for step in range(n):
         psi = U_round @ psi
@@ -54,6 +54,6 @@ ax.legend()
 ax.grid()
 
 # Save the figure
-fig.savefig(os.path.join(fig_dir, f'fidelity_vs_time_N{N}_tau{tau*1e3:.0f}ns.png'),
+fig.savefig(os.path.join(fig_dir, f'fidelity_vs_time_N{N}_tau{tau*1e3:.0f}ns_initial_state_|00>.png'),
             dpi=300, bbox_inches='tight')
 plt.show()

@@ -19,7 +19,7 @@ g_t= g # coupling for trotterization, same as exact
 delta_tj_values = 1/2*delta_j_values # half the Ising field for trotterization
 
 # Computational basis states |00>, |01>, |10>, |11>
-ground_state = np.array([1, 0, 0, 0], dtype=complex) # |00>
+state = np.array([0, 1, 0, 0], dtype=complex) # |00>
 overlap = {} # dictionary to store overlaps for each delta_j value and each number of Trotter steps
 for n in n_steps:
     tau = t[-1]/n # step size for trotterization 
@@ -33,10 +33,10 @@ for n in n_steps:
         H_gate = H_XY(N, (d/2)*np.ones(N), g_t)
 
         U_round = U_trotter(H_gate, tau, 1, N)
-        psi_exact = time_evolv(coffs(V,ground_state ), E, V, t_trotter) # array with psi_exact for each time step
+        psi_exact = time_evolv(coffs(V, state ), E, V, t_trotter) # array with psi_exact for each time step
 
         # Trotter evolution, one round at a time
-        psi = ground_state.copy() # start with the ground state
+        psi = state.copy() # start with the ground state
         psi_trot = [psi] # at t=0, psi_trot is the initial state
         for step in range(n):
             psi = U_round @ psi # next state after one Trotter round
@@ -56,11 +56,11 @@ for d in delta_j_values:
 
 ax.set_xlabel('Trotter step size τ (ns)')
 ax.set_ylabel(r'Time-averaged fidelity $\bar F$')
-ax.set_title(f'Trotter vs exact, N = {N}, initial state |00>')
+ax.set_title(f'Trotter vs exact, N = {N}, initial state |10>')
 ax.legend()
 ax.grid()
 
 T = t[-1]
-fig.savefig(os.path.join(fig_dir, f'fidelity_vs_tau_N{N}_fixed_Ts.png'),
+fig.savefig(os.path.join(fig_dir, f'fidelity_vs_tau_N{N}_fixed_Ts_initial_state_|10>.png'),
             dpi=300, bbox_inches='tight')
 plt.show()
