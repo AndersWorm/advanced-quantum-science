@@ -50,7 +50,7 @@ def H_XY(N, delta, g):
         H -= delta[j] /2 * sigma_op(sigma_z, j, N)
     for j in range(N):
         for k in range(j + 1, N):
-            H += (g[j, k]) * (sigma_op(sigma_x, j, N) @ sigma_op(sigma_x, k, N) + sigma_op(sigma_y, j, N) @ sigma_op(sigma_y, k, N))
+            H += 1/2 * (g[j, k]) * (sigma_op(sigma_x, j, N) @ sigma_op(sigma_x, k, N) + sigma_op(sigma_y, j, N) @ sigma_op(sigma_y, k, N))
     return H
 def H_AXY(N, delta, g):
     return sigma_op(sigma_x,0,N)@H_XY(N, delta, g)@sigma_op(sigma_x,0,N)

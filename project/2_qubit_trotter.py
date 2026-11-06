@@ -3,40 +3,61 @@ import matplotlib.pyplot as plt
 from functools import reduce
 from scipy import linalg as la
 from myfunctions import sigma_op, sigma_x,sigma_y, sigma_z, coffs, H_XY, U_trotter
+import os
 
-def U_trotter(H, tau, n, N):
-    """First-order Trotter: (U_axy U_xy)^n for one XY + A-XY pair."""
-    X1 = sigma_op(sigma_x, 0, N)
-    U_xy  = la.expm(-1j * H * tau)
-    U_axy = la.expm(-1j * (X1 @ H @ X1) * tau)
-    return np.linalg.matrix_power(U_axy @ U_xy, n @ U_axy @ U_xy)
-def H_XY(N, delta, g):
-    H = np.zeros((2**N, 2**N), dtype=complex)
-    for j in range(N):
-        H -= delta[j] /2 * sigma_op(sigma_z, j, N)
-    for j in range(N):
-        for k in range(j + 1, N):
-            H += (g[j, k]) * (sigma_op(sigma_x, j, N) @ sigma_op(sigma_x, k, N) + sigma_op(sigma_y, j, N) @ sigma_op(sigma_y, k, N))
-    return H
-def H_AXY(N, delta, g):
-    return sigma_op(sigma_x,0,N)@H_XY(N, delta, g)@sigma_op(sigma_x,0,N)
+fig_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'figures')
+os.makedirs(fig_dir, exist_ok=True)
+
 # System parameters for 2 qubits H__ising(units: rad/μs and μs)
 N = 2
 c = 2*np.pi * 3                          # coupling, 3 MHz
-g = c * (np.ones((N, N)) - np.eye(N))    # all-to-all, zero diagonal
+g = c * (np.ones((N, N)))    # all-to-all, zero diagonal
 delta_j_values = np.array([0.1, 1, 10]) * c
 t = np.linspace(0, 0.2, 1000)            # μs
 # system parameters for 2 qubits trotter
-tau = 0.2/20 # step size for trotterization 1 ns
 n= 20 # number of steps for trotterization
+tau = t[-1]/n # step size for trotterization 10 ns
 g_t= g
 delta_tj_values = 1/2*delta_j_values
 
 # Computational basis states |00>, |01>, |10>, |11>
 basis = np.eye(2**N, dtype=complex)
 n_states = 2**N
-E0 = basis[:, 0]  # initial state |00>
-d = delta_tj_values[1]  # choose a specific delta value for the trotter simulation
-H_xy = H_XY(N, d*np.ones(N), g_t)
-U = U_trotter(H_xy, tau, n, N)
-psi_t = U @ E0
+
+for d in delta_j_values:
+    H = H_XY(N, d*np.ones(N), g_t)
+    E, V = la.eigh(H)
+    ncols = 2
+    nrows = int(np.ceil(n_states / ncols))
+    fig, axes = plt.subplots(nrows, ncols, figsize=(10, 3.5*nrows),
+                             sharex=True, sharey=True)
+    axes = axes.flatten()
+
+    for i in range(n_states):
+        U_round = U_trotter(H, tau, 1, N)          # each round / timestep
+        psi = basis[:, i].copy()
+        psi_t = [psi]
+        for step in range(n):
+            psi = U_round @ psi
+            psi_t.append(psi)
+        psi_t = np.array(psi_t)                    # form (n+1, 2^N)
+        ax = axes[i]
+        for j in range(n_states):
+            t_trotter = tau * np.arange(n + 1)
+            ax.plot(t_trotter*1e3, np.abs(psi_t[:, j])**2, 'o-', label=f'|{j:0{N}b}>')
+        ax.set_title(f'Initial state |{i:0{N}b}>')
+        ax.grid()
+    for ax in axes[-ncols:]:
+        ax.set_xlabel('Time (ns)')
+    for ax in axes[::ncols]:
+        ax.set_ylabel(r'Population $|c_n(t)|^2$')
+
+    handles, labels = axes[0].get_legend_handles_labels()
+    fig.legend(handles, labels, loc='center right')
+    ratio = d / g[0, 1]
+    fig.suptitle(f'Ising trotter model, all-to-all coupling, N = {N}, Δ/g = {ratio:.1f}, Trotter steps = {n} and step size = {tau*1e3:.2f} ns')
+    fig.tight_layout(rect=[0, 0, 0.88, 0.96])
+
+    fig.savefig(os.path.join(fig_dir, f'Trotter_ising_N{N}_delta_over_g_{ratio:.1f}.png'),
+                dpi=300, bbox_inches='tight')
+    plt.close(fig)
