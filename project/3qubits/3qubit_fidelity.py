@@ -10,7 +10,7 @@ os.makedirs(fig_dir, exist_ok=True)
 # Parameters (rad/μs, μs)
 N = 3
 c = 2*np.pi * 3                                      # coupling, 3 MHz
-d = 1*c                                              # Δ/g = 1
+d = 0.1*c                                              # Δ/g = 0.1
 delta_I = d * np.ones(N)
 
 n = 50                                               # Trotter rounds
